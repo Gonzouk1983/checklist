@@ -54,6 +54,10 @@
       width: 100%;
       cursor: pointer;
     }
+    .save-button {
+      background: #28a745;
+      margin-top: 5px;
+    }
     #new-project {
       margin: 20px 0;
       display: flex;
@@ -132,14 +136,15 @@
       card.innerHTML = `
         <div class="title" contenteditable="true">${title}</div>
         <textarea placeholder="Notes...">${notes || ""}</textarea>
+        <button class="save-button">Save</button>
         <button onclick="this.parentElement.remove(); saveState()">Delete</button>
       `;
 
       const titleDiv = card.querySelector(".title");
       const notesArea = card.querySelector("textarea");
+      const saveBtn = card.querySelector(".save-button");
 
-      titleDiv.addEventListener("input", saveState);
-      notesArea.addEventListener("input", saveState);
+      saveBtn.addEventListener("click", saveState);
 
       card.addEventListener("dragstart", e => {
         e.dataTransfer.setData("text/plain", null);
