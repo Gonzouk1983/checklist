@@ -36,6 +36,7 @@
       border-radius: 8px;
       margin-bottom: 10px;
       cursor: grab;
+      position: relative;
     }
     .card textarea {
       width: 100%;
@@ -46,7 +47,6 @@
       margin-top: 5px;
     }
     .card button {
-      background: red;
       border: none;
       color: white;
       padding: 5px;
@@ -56,7 +56,23 @@
     }
     .save-button {
       background: #28a745;
-      margin-top: 5px;
+    }
+    .delete-button {
+      background: red;
+    }
+    .timestamp {
+      font-size: 0.7rem;
+      color: #ccc;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .saved-message {
+      font-size: 0.8rem;
+      color: #28a745;
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      display: none;
     }
     #new-project {
       margin: 20px 0;
@@ -106,7 +122,8 @@
         data.push({
           name: card.querySelector(".title").innerText,
           notes: card.querySelector("textarea").value,
-          status: card.closest(".column").getAttribute("data-status")
+          status: card.closest(".column").getAttribute("data-status"),
+          timestamp: new Date().toLocaleString()
         });
       });
       localStorage.setItem("projects", JSON.stringify(data));
@@ -115,7 +132,7 @@
     function loadState() {
       const data = JSON.parse(localStorage.getItem("projects")) || [];
       data.forEach(item => {
-        createCard(item.name, item.status, item.notes);
+        createCard(item.name, item.status, item.notes, item.timestamp);
       });
     }
 
@@ -123,28 +140,37 @@
       const input = document.getElementById("project-name");
       const name = input.value.trim();
       if (name !== "") {
-        createCard(name, "Started", "");
+        createCard(name, "Started", "", new Date().toLocaleString());
         input.value = "";
         saveState();
       }
     }
 
-    function createCard(title, status, notes) {
+    function createCard(title, status, notes, timestamp = "") {
       const card = document.createElement("div");
       card.className = "card";
       card.draggable = true;
       card.innerHTML = `
         <div class="title" contenteditable="true">${title}</div>
         <textarea placeholder="Notes...">${notes || ""}</textarea>
+        <div class="timestamp">${timestamp ? `Last saved: ${timestamp}` : ""}</div>
+        <div class="saved-message">✔ Saved!</div>
         <button class="save-button">Save</button>
-        <button onclick="this.parentElement.remove(); saveState()">Delete</button>
+        <button class="delete-button" onclick="this.parentElement.remove(); saveState()">Delete</button>
       `;
 
       const titleDiv = card.querySelector(".title");
       const notesArea = card.querySelector("textarea");
       const saveBtn = card.querySelector(".save-button");
+      const timestampDiv = card.querySelector(".timestamp");
+      const savedMsg = card.querySelector(".saved-message");
 
-      saveBtn.addEventListener("click", saveState);
+      saveBtn.addEventListener("click", () => {
+        timestampDiv.textContent = `Last saved: ${new Date().toLocaleString()}`;
+        savedMsg.style.display = "inline";
+        setTimeout(() => savedMsg.style.display = "none", 2000);
+        saveState();
+      });
 
       card.addEventListener("dragstart", e => {
         e.dataTransfer.setData("text/plain", null);
