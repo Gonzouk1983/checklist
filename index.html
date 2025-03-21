@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Tracker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { text-align: center; }
+    .board {
+      display: flex;
+      gap: 15px;
+      overflow-x: auto;
+    }
+    .column {
+      flex: 1;
+      min-width: 250px;
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .column h2 {
+      text-align: center;
+      margin-top: 0;
+    }
+    .card {
+      background: #333;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      cursor: grab;
+    }
+    .card textarea {
+      width: 100%;
+      background: #222;
+      border: none;
+      color: #fff;
+      resize: vertical;
+      margin-top: 5px;
+    }
+    .card button {
+      background: red;
+      border: none;
+      color: white;
+      padding: 5px;
+      margin-top: 5px;
+      width: 100%;
+      cursor: pointer;
+    }
+    #new-project {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    #new-project input {
+      padding: 10px;
+      font-size: 1rem;
+      width: 300px;
+    }
+    #new-project button {
+      padding: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Project Tracker</h1>
+  <div id="new-project">
+    <input type="text" id="project-name" placeholder="New project name...">
+    <button onclick="addProject()">Add Project</button>
+  </div>
+  <div class="board" id="board">
+    <div class="column" data-status="Started">
+      <h2>Started</h2>
+    </div>
+    <div class="column" data-status="In Progress">
+      <h2>In Progress</h2>
+    </div>
+    <div class="column" data-status="Completed">
+      <h2>Completed</h2>
+    </div>
+    <div class="column" data-status="Improvement">
+      <h2>Improvement</h2>
+    </div>
+  </div>
+
+  <script>
+    let board = document.getElementById("board");
+
+    function saveState() {
+      const data = [];
+      document.querySelectorAll(".card").forEach(card => {
+        data.push({
+          name: card.querySelector(".title").innerText,
+          notes: card.querySelector("textarea").value,
+          status: card.closest(".column").getAttribute("data-status")
+        });
+      });
+      localStorage.setItem("projects", JSON.stringify(data));
+    }
+
+    function loadState() {
+      const data = JSON.parse(localStorage.getItem("projects")) || [];
+      data.forEach(item => {
+        createCard(item.name, item.status, item.notes);
+      });
+    }
+
+    function addProject() {
+      const input = document.getElementById("project-name");
+      const name = input.value.trim();
+      if (name !== "") {
+        createCard(name, "Started", "");
+        input.value = "";
+        saveState();
+      }
+    }
+
+    function createCard(title, status, notes) {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.draggable = true;
+      card.innerHTML = `
+        <div class="title" contenteditable="true">${title}</div>
+        <textarea placeholder="Notes...">${notes || ""}</textarea>
+        <button onclick="this.parentElement.remove(); saveState()">Delete</button>
+      `;
+
+      card.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", null);
+        card.classList.add("dragging");
+      });
+
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+        saveState();
+      });
+
+      const column = [...document.querySelectorAll(".column")].find(c => c.getAttribute("data-status") === status);
+      column.appendChild(card);
+    }
+
+    document.querySelectorAll(".column").forEach(column => {
+      column.addEventListener("dragover", e => {
+        e.preventDefault();
+        const dragging = document.querySelector(".dragging");
+        column.appendChild(dragging);
+      });
+    });
+
+    window.addEventListener("load", loadState);
+  </script>
+</body>
+</html>
