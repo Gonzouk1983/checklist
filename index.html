@@ -135,6 +135,12 @@
         <button onclick="this.parentElement.remove(); saveState()">Delete</button>
       `;
 
+      const titleDiv = card.querySelector(".title");
+      const notesArea = card.querySelector("textarea");
+
+      titleDiv.addEventListener("input", saveState);
+      notesArea.addEventListener("input", saveState);
+
       card.addEventListener("dragstart", e => {
         e.dataTransfer.setData("text/plain", null);
         card.classList.add("dragging");
